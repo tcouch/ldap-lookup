@@ -1,0 +1,47 @@
+(lp0
+(dp1
+S'Username'
+p2
+S'cceatco'
+p3
+sS'Search Term'
+p4
+S'cceatco'
+p5
+sS'Title'
+p6
+S'Dr'
+p7
+sS'Last Name'
+p8
+S'Couch'
+p9
+sS'UPI'
+p10
+S'tcouc69'
+p11
+sS'Telephone'
+p12
+S'65152'
+p13
+sS'Email'
+p14
+S't.couch@ucl.ac.uk'
+p15
+sS'First Name'
+p16
+S'Tom'
+p17
+sS'Faculty'
+p18
+S'Information Services Division'
+p19
+sS'Department'
+p20
+S'RITS Res Comp & Facilitating Serv'
+p21
+sS'Full Name'
+p22
+S'Tom Couch'
+p23
+sa.
