@@ -17,7 +17,7 @@ def getSearchTermType(searchTerm):
         elif isUsername(searchTerm):
                 searchTermType = "Username"
         else:
-                print "Searching for Full Name..."
+                print("Searching for Full Name...")
                 searchTermType = "Full Name"
         return searchTermType
 
@@ -52,13 +52,13 @@ def chooseResult(ldapEntry):
                 mail = ''.join(x[-1].get('mail','Not found'))
                 choices.append([count, gn, sn, mail, dept])
                 count += 1
-        print "\nPlease select which of these is most likely to be the person you are looking for:"
-        print ""
+        print("\nPlease select which of these is most likely to be the person you are looking for:")
+        print("")
         for i in choices:
                 print ("%d:\t%s\t%s\t%s\t%s") % (i[0],i[1],i[2],i[3],i[4])
         validSelection = False
         while validSelection == False:
-                selection = raw_input("\nEnter a number from the choices above: ")
+                selection = input("\nEnter a number from the choices above: ")
                 try:
                         selection = int(selection)
                         if selection > 0 and selection < count:
@@ -72,13 +72,13 @@ def chooseResult(ldapEntry):
 def getInput():
         qString = "Would you like to import search items from a file(f/F)" \
                   " or enter manually(m/M)?"
-        inputMethod = raw_input(qString)
+        inputMethod = input(qString)
         if inputMethod in ["f","F"]:
                 searchList = getInputFromFile()
         elif inputMethod in ["m","M"]:
                 searchList = getManualInput()
         else:
-                print "You did not enter a valid response"
+                print("You did not enter a valid response")
                 con.unbind()
                 sys.exit()
         return searchList
@@ -88,7 +88,7 @@ def getInputFromFile():
         fileFound = False
         while fileFound == False:
                 qString = "Please type the name of the file:"
-                fileName = raw_input(qString)
+                fileName = input(qString)
                 try:
                         with open(fileName, 'rb') as inputFile:
                                 reader = csv.reader(inputFile, delimiter=',')
@@ -96,19 +96,19 @@ def getInputFromFile():
                                         searchList.append(row[0])
                         fileFound = True
                 except IOError:
-                        print "Could not locate that file."
+                        print("Could not locate that file.")
         return searchList
 
 def getManualInput():
         qString = "Enter one or more emails, names, usernames or UPIs " \
                   "separated by commas:"
-        searchInputString = raw_input(qString)
+        searchInputString = input(qString)
         searchList = searchInputString.split(",")
         return searchList
         
 def saveToFile(resultsList):
         qString = "Please type a file name for the output:"
-        fname = raw_input(qString)
+        fname = input(qString)
         if fname == "":
                 sys.exit()
         outputKeys = ['Search Term',
@@ -138,12 +138,12 @@ def setupLDAPConnection():
 
         if len(sys.argv) > 1:
                 if sys.argv[1] == "-h" or sys.argv[1] == "--help":
-                        print usage
+                        print(usage)
                         sys.exit()
                 else:
                         user_name = sys.argv[1]
         else:
-                user_name = raw_input('Enter your UCL username: ')
+                user_name = input('Enter your UCL username: ')
 
         pw = getpass.getpass("Password for %s: " % user_name)
         
@@ -156,15 +156,15 @@ def setupLDAPConnection():
                 try:
                         con.bind_s(bind_user, pw)
                 except ldap.INVALID_CREDENTIALS:
-                        print "Your username or password is incorrect."
+                        print("Your username or password is incorrect.")
                         sys.exit()
-        except ldap.LDAPError, e:
+        except ldap.LDAPError as e:
                 if type(e.message) == dict and e.message.has_key('desc'):
-                        print e.message['desc']
+                        print(e.message['desc'])
                 else:
-                        print e
+                        print(e)
                 sys.exit()
-        print "Connection to ldap successful"
+        print("Connection to ldap successful")
         return con
 
 def getResults(con,searchList):
@@ -174,11 +174,8 @@ def getResults(con,searchList):
         for searchTerm in searchList:
                 searchTerm = searchTerm.lower()
                 searchTermType = getSearchTermType(searchTerm)
-                if filter(lambda ldapData: ldapData[searchTermType] == searchTerm,
-                          ldapHistory):
-                        searchResult = filter(lambda ldapData: ldapData[searchTermType] == searchTerm,
-                                              ldapHistory)[0]
-                else:
+                searchResult = [ldapData for ldapData in ldapHistory if ldapData[searchTermType] == searchTerm]
+                if not searchResult:
                         searchResult = queryLDAP(con,searchTerm,searchTermType)
                         if searchResult["Username"] != "Not found":
                                 ldapHistory.append(searchResult)
@@ -190,7 +187,7 @@ def getResults(con,searchList):
 def queryLDAP(con,searchTerm,searchTermType):
         searchResult = {}
         base= "ou=Departments,dc=uclusers,dc=ucl,dc=ac,dc=uk"
-        fields = ['title','department','sn','givenName',
+        fields = ["title",'department','sn','givenName',
                   'mail','telephoneNumber','employeeID','cn']
         if searchTermType == "Email":
                 filterString = "(proxyAddresses=*%s*)" % (searchTerm)
@@ -207,6 +204,7 @@ def queryLDAP(con,searchTerm,searchTermType):
                 ldapEntry = {}
         else:
                 ldapEntry = ldapEntry[0][1]
+        print(ldapEntry)
         searchResult["Title"] = ''.join(ldapEntry.get('title','Not found'))
         searchResult["Department"] = ''.join(ldapEntry.get('department','Not found'))
         searchResult["Last Name"] = ''.join(ldapEntry.get('sn','Not found'))
@@ -223,16 +221,16 @@ def queryLDAP(con,searchTerm,searchTermType):
 def displayOutput(searchList,results):
         count = 0
         for result in results:
-                print "Search Term %s found:" % (searchList[count])
+                print("Search Term %s found:") % (searchList[count])
                 count += 1
-                print result["Title"], " ", result["First Name"], " ", result["Last Name"]
-                print "Email: %s" % (result["Email"])
-                print "Telephone: %s" % (result["Telephone"])
-                print "UPI: %s" % (result["UPI"])
-                print "Username: %s" % (result["Username"])
-                print "Department: %s" % (result["Department"])
-                print "Faculty: %s" % (result["Faculty"])
-                print "\n"
+                print(result["Title"], " ", result["First Name"], " ", result["Last Name"])
+                print("Email: %s") % (result["Email"])
+                print("Telephone: %s") % (result["Telephone"])
+                print("UPI: %s") % (result["UPI"])
+                print("Username: %s") % (result["Username"])
+                print("Department: %s") % (result["Department"])
+                print("Faculty: %s") % (result["Faculty"])
+                print("\n")
         return 0
 
 def getFaculty(dept):
@@ -247,7 +245,7 @@ def getFaculty(dept):
                 
 def savedCopyWanted():
         query = "Would you like to save a copy? (y/n)"
-        response = raw_input(query)
+        response = input(query)
         if response in ["Y","y"]:
                 return True
         elif response in ["N","n"]:
