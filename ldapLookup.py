@@ -205,14 +205,22 @@ def queryLDAP(con,searchTerm,searchTermType):
         else:
                 ldapEntry = ldapEntry[0][1]
         print(ldapEntry)
-        searchResult["Title"] = ''.join(ldapEntry.get('title','Not found'))
-        searchResult["Department"] = ''.join(ldapEntry.get('department','Not found'))
-        searchResult["Last Name"] = ''.join(ldapEntry.get('sn','Not found'))
-        searchResult["First Name"] = ''.join(ldapEntry.get('givenName','Not found'))
-        searchResult["Email"] = ''.join(ldapEntry.get('mail','Not found'))
-        searchResult["Telephone"] = ''.join(ldapEntry.get('telephoneNumber','Not found'))
-        searchResult["UPI"] = ''.join(ldapEntry.get('employeeID','Not found'))
-        searchResult["Username"] = ''.join(ldapEntry.get('cn','Not found'))
+        searchResult["Title"] = str(ldapEntry.get('title','Not found')[0], 
+                                    encoding='UTF-8')
+        searchResult["Department"] = str(ldapEntry.get('department','Not found')[0],
+                                         encoding='UTF-8')
+        searchResult["Last Name"] = str(ldapEntry.get('sn','Not found')[0], 
+                                        encoding='UTF-8')
+        searchResult["First Name"] = str(ldapEntry.get('givenName','Not found')[0],
+                                         encoding='UTF-8')
+        searchResult["Email"] = str(ldapEntry.get('mail','Not found')[0], 
+                                    encoding='UTF-8')
+        searchResult["Telephone"] = str(ldapEntry.get('telephoneNumber','Not found')[0],
+                                        encoding='UTF-8')
+        searchResult["UPI"] = str(ldapEntry.get('employeeID','Not found')[0], 
+                                  encoding='UTF-8')
+        searchResult["Username"] = str(ldapEntry.get('cn','Not found')[0], 
+                                       encoding='UTF-8')
         searchResult["Full Name"] = searchResult["First Name"] + " " + searchResult["Last Name"]
         searchResult["Search Term"] = searchTerm
         searchResult["Faculty"] = getFaculty(searchResult["Department"])
@@ -236,7 +244,7 @@ def displayOutput(searchList,results):
 def getFaculty(dept):
         #lookup faculty in orgchart file using department
         orgchart = "orgchart.csv"
-        with open(orgchart, 'rb') as f:
+        with open(orgchart, 'r') as f:
             reader = csv.reader(f, delimiter=',')
             for row in reader:
                 if dept == row[1]:
