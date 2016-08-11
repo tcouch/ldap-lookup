@@ -122,7 +122,7 @@ def saveToFile(resultsList):
                       'Department',
                       'Faculty',
                       'Full Name']
-        writer = csv.DictWriter(open(fname, 'wb'), outputKeys, restval="Not Found")
+        writer = csv.DictWriter(open(fname, 'w'), outputKeys, restval="Not Found")
         writer.writeheader()
         writer.writerows(resultsList)
 
@@ -204,7 +204,6 @@ def queryLDAP(con,searchTerm,searchTermType):
                 ldapEntry = {}
         else:
                 ldapEntry = ldapEntry[0][1]
-        print(ldapEntry)
         searchResult["Title"] = str(ldapEntry.get('title','Not found')[0], 
                                     encoding='UTF-8')
         searchResult["Department"] = str(ldapEntry.get('department','Not found')[0],
@@ -229,16 +228,16 @@ def queryLDAP(con,searchTerm,searchTermType):
 def displayOutput(searchList,results):
         count = 0
         for result in results:
-                print("Search Term %s found:") % (searchList[count])
-                count += 1
+                print("Search Term {0} found:".format(searchList[count]))
                 print(result["Title"], " ", result["First Name"], " ", result["Last Name"])
-                print("Email: %s") % (result["Email"])
-                print("Telephone: %s") % (result["Telephone"])
-                print("UPI: %s") % (result["UPI"])
-                print("Username: %s") % (result["Username"])
-                print("Department: %s") % (result["Department"])
-                print("Faculty: %s") % (result["Faculty"])
+                print("Email: {0}".format(result["Email"]))
+                print("Telephone: {0}".format(result["Telephone"]))
+                print("UPI: {0}".format(result["UPI"]))
+                print("Username: {0}".format(result["Username"]))
+                print("Department: {0}".format(result["Department"]))
+                print("Faculty: {0}".format(result["Faculty"]))
                 print("\n")
+                count += 1
         return 0
 
 def getFaculty(dept):
