@@ -51,3 +51,7 @@ Temporary Items
 
 # Python egg
 ldap_lookup.egg-info
+
+# Personal config file
+ldap_lookup/ldapConfig.py
+
