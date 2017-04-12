@@ -10,17 +10,17 @@ class Connection(object):
     def __init__(self):
         self.server = ldapConfig["server"]
         self.base = ldapConfig["base"]
+        self.FQDN = ldapConfig["FQDN"]
         self.conn = self.connect()
         
     def connect(self):
         uid = input('Enter your userid: ')
         pw = getpass.getpass("Password for {}: ".format(uid))
-        ou = uid[0:4]
-        bind_user = "cn={0}, ou={1}, {2}".format(uid, ou, self.base)
+        bind_user = "cn={0}, {1}".format(uid, self.FQDN)
         try:
             connection = ldap.initialize(self.server)
             try:
-                connection.bind_s(bind_user, pw)
+                connection.simple_bind_s(bind_user, pw)
             except ldap.INVALID_CREDENTIALS:
                 print("Your username or password is incorrect.")
                 sys.exit()
