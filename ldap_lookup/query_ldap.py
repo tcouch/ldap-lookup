@@ -1,26 +1,54 @@
 #!/usr/bin/env python3
 
 import re
-from .ldap_conn import Connection
+from ldap3 import Server, Connection, core, ALL
+import getpass
+from ldapConfig import ldapConfig
+
+
+class LDAPConnection():
+    def __init__(self):
+        self.server = Server(ldapConfig['server'], get_info=ALL)
+        self.FQDN = ldapConfig["FQDN"]
+        self.uid = input('Enter your userid: ')
+        self.pw = getpass.getpass("Password for {}: ".format(self.uid))
+        self.bind_user = "CN={0},{1}".format(self.uid, self.FQDN)
+        self.connection = self.make_connection()
+
+    def make_connection(self):
+        try:
+            c = Connection(self.server,
+                           self.bind_user,
+                           self.pw,
+                           auto_bind=True)
+        except core.exceptions.LDAPBindError:
+                print("Your username or password is incorrect.")
+                sys.exit()
+        except core.exceptions.LDAPExceptionError as e:
+            print(e)
+            sys.exit()
+        return c
+
 
 class Query(object):
     def __init__(self, searchterm, connection=None, fields=[]):
         self.searchterm = searchterm
-        self.connection = connection
+        self.conn = connection
         self.searchtype = self.get_search_term_type()
+        self.base = ldapConfig["base"]
         self.filter = self.get_filter()
         # Search for these default fields is none specifically requested
         if not fields:
             self.fields = ['title', 'department', 'sn', 'givenName',
-                  'mail', 'telephoneNumber', 'employeeID', 'cn']
-        else: self.fields = fields
+                           'mail', 'telephoneNumber', 'employeeID', 'cn']
+        else:
+            self.fields = fields
         # If a connection object hasn't been passed, make one
         if not connection:
-            self.connection = Connection()
-        
+            self.conn = LDAPConnection().make_connection()
 
     def get_filter(self):
-        """Search proxy addresses if looking for email, otherwise use anr 
+        """Search proxy addresses if looking for email, otherwise use anr
         which covers all other cases"""
         if self.searchtype == "email":
             filter = "(proxyAddresses=*{}*)".format(self.searchterm)
@@ -28,46 +56,38 @@ class Query(object):
             filter = "(anr={})".format(self.searchterm)
         return filter
 
-
     def get_search_term_type(self):
         # Is it an email?
-        if re.match(r'.+@.+', self.searchterm): return "email"
+        if re.match(r'.+@.+', self.searchterm):
+            return "email"
         # Is it a UPI?
-        elif re.match(r'^[a-z]{5}[0-9]{2}$', self.searchterm): return "UPI"
+        elif re.match(r'^[a-z]{5}[0-9]{2}$', self.searchterm):
+            return "UPI"
         # Is it a userid?
-        elif re.match(r'^[a-z0-9]{7}$', self.searchterm): return "userid"
+        elif re.match(r'^[a-z0-9]{7}$', self.searchterm):
+            return "userid"
         # If none of the above assume it's a name
-        else: return "name"
-
+        else:
+            return "name"
 
     def get_result(self):
-        # second argument '2' = ldap.SCOPE_SUBTREE (saves importing ldap here)
-        ldap_output = self.connection.conn.search_s(self.connection.base, 2,
-                                                    self.filter, self.fields)
+        self.conn.search(self.base, self.filter, attributes=self.fields)
+        ldap_output = self.conn.entries
         if len(ldap_output) > 1:
             result = self.select_result(ldap_output)
         elif len(ldap_output) == 0:
             result = {}
-        else: result = ldap_output[0][1]
-        result = self.clean_result(result)
+        else:
+            result = ldap_output[0].entry_attributes_as_dict
         self.result = result
         return self.result
-
-
-    def clean_result(self, result):
-        # string data needs converting to UTF-8 from bytes
-        # because ldap is returning bytes for some reason
-        cleaned = { k: result[k][0].decode('UTF-8') for k in result.keys() }
-        return cleaned
-
 
     def select_result(self, ldap_output):
         count = 1
         choices = []
-        for choice in ldap_output:
-            cc = self.clean_result(choice[-1])
-            choices.append([count, cc['givenName'], cc['sn'],
-                           cc['mail'], cc['department']])
+        for entry in ldap_output:
+            choices.append([count, entry.givenName, entry.sn,
+                           entry.mail, entry.department])
             count += 1
         print("\nPlease select which of these is most likely to be the person"
               " you are looking for:\n")
@@ -77,14 +97,13 @@ class Query(object):
         while not valid_selection:
             item_number = input("\nEnter a number from the choices above: ")
             try:
-                selection = ldap_output[int(item_number)-1][1]
+                selection = ldap_output[int(item_number)-1]
                 valid_selection = True
             except:
                 print("Not a valid selection!")
-        return selection
+        return selection.entry_attributes_as_dict
 
 
 if __name__ == "__main__":
     from sys import argv
     print(Query(argv[1]).get_result())
-    
