@@ -3,7 +3,8 @@
 import re
 from ldap3 import Server, Connection, core, ALL
 import getpass
-from ldapConfig import ldapConfig
+import sys
+from .ldapConfig import ldapConfig
 
 
 class LDAPConnection():
