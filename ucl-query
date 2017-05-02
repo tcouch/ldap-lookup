@@ -1,0 +1,15 @@
+import ldap_lookup.query_ldap
+import sys
+
+if __name__=="__main__":
+    try:
+        search_term = sys.argv[1]
+        result = ldap_lookup.query_ldap.Query(search_term).get_result()
+
+        for k,v in result.items():
+            print("{0}: {1}".format(k, v[0]))
+    except IndexError:
+        print("No search string given.\n  Usage: ucl-query [search string]")
+        sys.exit()
+
+
