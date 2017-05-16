@@ -2,7 +2,7 @@
 
 import re
 from ldap3 import Server, Connection, core, ALL
-import getpass
+from getpass import getpass
 import sys
 from .ldapConfig import ldapConfig
 
@@ -11,8 +11,12 @@ class LDAPConnection():
     def __init__(self):
         self.server = Server(ldapConfig['server'], get_info=ALL)
         self.FQDN = ldapConfig["FQDN"]
-        self.uid = input('Enter your userid: ')
-        self.pw = getpass.getpass("Password for {}: ".format(self.uid))
+        self.uid = ldapConfig.get("uid")
+        if not self.uid:
+            self.uid = input('Enter your userid: ')
+        self.pw = ldapConfig.get("pw")
+        if not self.pw:
+            self.pw = getpass("Password for {}: ".format(self.uid))
         self.bind_user = "CN={0},{1}".format(self.uid, self.FQDN)
         self.connection = self.make_connection()
 
@@ -39,11 +43,10 @@ class Query(object):
         self.base = ldapConfig["base"]
         self.filter = self.get_filter()
         # Search for these default fields is none specifically requested
-        if not fields:
-            self.fields = ['title', 'department', 'sn', 'givenName',
-                           'mail', 'telephoneNumber', 'employeeID', 'cn']
-        else:
-            self.fields = fields
+        self.fields = ['title', 'department', 'sn', 'givenName',
+                       'mail', 'telephoneNumber', 'employeeID', 'cn']
+        if fields:
+            self.fields.extend(fields)
         # If a connection object hasn't been passed, make one
         if not connection:
             self.conn = LDAPConnection().make_connection()

@@ -1,15 +1,44 @@
 import ldap_lookup.query_ldap
+import argparse
 import sys
 
+attribute_map = {
+    "Title":"title",
+    "First name":"givenName",
+    "Surname":"sn",
+    "Department":"department",
+    "Username":"cn",
+    "UPI":"employeeID",
+    "Email":"mail",
+    "Phone":"telephoneNumber"
+}
+
+attr_list = ["Title","First name","Surname","Department",
+              "Username","UPI","Email","Phone"]
+
 if __name__=="__main__":
-    try:
-        search_term = sys.argv[1]
-    except IndexError:
-        print("No search string given.\n  Usage: ucl-query [search string]")
-        sys.exit()
-    result = ldap_lookup.query_ldap.Query(search_term).get_result()
-    for k, v in result.items():
-        if v:
-            print("{0}: {1}".format(k, v[0]))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("search_term",
+                        help="Search term; e.g. name, email, userid",
+                        type=str)
+    parser.add_argument("-a", "--attribute",
+                        nargs="*",
+                        type=str,
+                        choices=attr_list,
+                        help="Request for specific attributes to be returned, default to all")
+    args = parser.parse_args()
+    search_term = args.search_term
+    if args.attribute:
+        attr_list = args.attribute
+    ldap_fields = []
+    for a in attr_list:
+        ldap_fields.append(attribute_map[a])
+    result = ldap_lookup.query_ldap.Query(search_term,
+             fields = ldap_fields).get_result()
+    for a in attr_list:
+        value = result.get(attribute_map[a], ['Not found'])
+        if value:
+            value = value[0]
         else:
-            print("{0}: Not found".format(k))
+            value = 'Not found'
+        print("{0}: {1}".format(a, value))
