@@ -78,11 +78,11 @@ class Query(object):
         self.conn.search(self.base, self.filter, attributes=self.fields)
         ldap_output = self.conn.entries
         if len(ldap_output) > 1:
-            result = self.select_result(ldap_output)
+            result = self.entry_2_dict(self.select_result(ldap_output))
         elif len(ldap_output) == 0:
             result = {}
         else:
-            result = ldap_output[0].entry_attributes_as_dict
+            result = self.entry_2_dict(ldap_output[0])
         self.result = result
         return self.result
 
@@ -90,8 +90,10 @@ class Query(object):
         count = 1
         choices = []
         for entry in ldap_output:
-            choices.append([count, entry.givenName, entry.sn,
-                           entry.mail, entry.department])
+            entry_dict = self.entry_2_dict(entry)
+            choices.append([count, entry_dict['givenName'], entry_dict['sn'],
+                           entry_dict.get('mail','email not found'),
+                           entry_dict.get('department','Dept not found')])
             count += 1
         print("\nPlease select which of these is most likely to be the person"
               " you are looking for:\n")
@@ -105,7 +107,13 @@ class Query(object):
                 valid_selection = True
             except:
                 print("Not a valid selection!")
-        return selection.entry_attributes_as_dict
+        return selection
+
+    def entry_2_dict(self, entry):
+        entry_dict = {}
+        for item in entry:
+            entry_dict[item.key] = item.value
+        return entry_dict
 
 
 if __name__ == "__main__":

@@ -36,9 +36,5 @@ if __name__=="__main__":
     result = ldap_lookup.query_ldap.Query(search_term,
              fields = ldap_fields).get_result()
     for a in attr_list:
-        value = result.get(attribute_map[a], ['Not found'])
-        if value:
-            value = value[0]
-        else:
-            value = 'Not found'
+        value = result.get(attribute_map[a], 'Not found')
         print("{0}: {1}".format(a, value))
